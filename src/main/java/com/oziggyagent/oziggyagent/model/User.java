@@ -1,94 +1,68 @@
 package com.oziggyagent.oziggyagent.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import lombok.*;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 
-import javax.management.relation.Role;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import javax.validation.constraints.NotBlank;
+import java.util.*;
 
-@Data
-@RequiredArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Setter
 @Entity
-public class User implements UserDetails{
+@Builder
+@Table
+public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-     private long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
 
     private boolean enable=false;
     
     private String password;
 
 
-    private String FirstName;
+    private String firstName;
     private String lastName;
 
     private String phoneNumber;
+
     private String emailAddress;
+    private String location;
+      @ManyToMany
+    private List<Agent> agents=new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    private List <AppRole> appRole=new ArrayList<>();
 
-    public User(long id,
-                String  emailAddress,
-                String password,
-                Collection<? extends GrantedAuthority> authority ){
+
+
+
+    @OneToMany
+    private Set<Message> myMessages = new HashSet<>();
+
+    @ManyToMany( fetch = FetchType.EAGER)
+    private Set <MyRoles> appRole = new HashSet<>();
+
+
+    public void addUserRole(MyRoles role){
+        this.appRole.add(role);
+    }
+
+    public void addAdminRole(MyRoles roles){
+        this.appRole.add(roles);
+    }
+
+    public  void addMessage(Message message){
+        this.myMessages.add(message);
+
+    }
+
+    public  void assignAgent(Agent agent){
+        this.agents.add(agent);
 
     }
 
 
-
-
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-
-    String name =null;
-        for (AppRole role:appRole) {
-            name=role.name();
-
-        }
-
-        return List.of(new SimpleGrantedAuthority(appRole+name));
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getUsername() {
-        return emailAddress;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enable;
-    }
 }
